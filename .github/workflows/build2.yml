@@ -1,0 +1,27 @@
+name: 构建发裂的长枪 jar
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.1.1'
+      - name: 编译
+        run: |
+          mkdir -p src_tree && unzip -o ./*.zip -d src_tree
+          cd "$(find src_tree -name build.gradle -printf '%h\n' | head -n 1)"
+          gradle build --no-daemon --stacktrace
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp build/libs/*.jar "$GITHUB_WORKSPACE/out/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crackedspear-jar
+          path: out/*.jar
+          if-no-files-found: error
