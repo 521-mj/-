@@ -1,4 +1,4 @@
-name: 构建发裂的长枪 jar
+name: Build Cracked Spear
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -9,17 +9,21 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: 17
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.1.1'
-      - name: 编译
+      - name: Build jar
         run: |
-          mkdir -p src_tree && unzip -o ./*.zip -d src_tree
-          cd "$(find src_tree -name build.gradle -printf '%h\n' | head -n 1)"
-          gradle build --no-daemon --stacktrace
-          mkdir -p "$GITHUB_WORKSPACE/out"
-          cp build/libs/*.jar "$GITHUB_WORKSPACE/out/"
+          mkdir -p src_tree
+          unzip -o *.zip -d src_tree
+          WORK=$(find src_tree -name build.gradle | head -n 1)
+          cd $(dirname $WORK)
+          chmod +x ./gradlew
+          if command -v gradle > /dev/null; then G=gradle; else G=./gradlew; fi
+          $G build --no-daemon --stacktrace
+          mkdir -p $GITHUB_WORKSPACE/out
+          cp build/libs/*.jar $GITHUB_WORKSPACE/out/
       - uses: actions/upload-artifact@v4
         with:
           name: crackedspear-jar
